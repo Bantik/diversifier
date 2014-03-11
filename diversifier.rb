@@ -1,3 +1,7 @@
+require 'rubygems'
+require 'gosu'
+require 'debugger'
+
 module Diversifier
   
   require_relative 'diversifier/group'
