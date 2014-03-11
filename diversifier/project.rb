@@ -7,15 +7,16 @@ module Diversifier
     def self.run
       project = Project.new
       project.iterate(limit: 100)
-      project.iteration_report
-      project.final_report
+      project
+      #project.iteration_report
+      #project.final_report
     end
 
     def initialize
       self.group = Group.new
       start = Diversifier::Iteration.new
       start.group = self.group
-      start.previous_effectiveness = 75
+      start.previous_effectiveness = 50
       start.previous_popularity = 10
       self.iterations = [start]
     end
@@ -73,11 +74,11 @@ module Diversifier
 
     def final_report
       s = ""
-      s << "Releases: #{self.iterations.count}\t"
-      s << "Max Group Size: #{max_group_size}\t"
-      s << "Max Diversity: #{max_diversity.to_i}\t"
-      s << "Max Effectiveness: #{max_effectiveness.to_i}\t"
-      s << "Max Popularity: #{max_popularity.to_i}\t"
+      s << "#{self.iterations.count}\t"
+      s << "#{max_group_size}\t"
+      s << "#{max_diversity.to_i}\t"
+      s << "#{max_effectiveness.to_i}\t"
+      s << "#{max_popularity.to_i}\t"
       puts s
     end
 

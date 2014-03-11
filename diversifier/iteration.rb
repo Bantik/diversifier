@@ -35,7 +35,7 @@ module Diversifier
       if meets_needs?
         new_value = (self.previous_popularity + 5)
       else
-        new_value = (self.previous_popularity - 10)
+        new_value = (self.previous_popularity - 5)
       end 
       @popularity = [[new_value, 100].min, 0].max
     end
