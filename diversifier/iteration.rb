@@ -5,6 +5,8 @@ module Diversifier
     attr_accessor :group, :group_size, :popularity, :diversity, :effectiveness
     attr_accessor :previous_effectiveness, :previous_popularity
 
+    MINIMUM_EFFECTIVENESS = 75
+
     def self.with(group, effectiveness, popularity)
       iteration = new
       iteration.group = group
@@ -20,11 +22,11 @@ module Diversifier
     end
 
     def effectiveness
-      @effectiveness ||= self.group.effectiveness
+      self.group.effectiveness
     end
 
     def meets_needs?
-      effectiveness >= 75
+      effectiveness >= MINIMUM_EFFECTIVENESS
     end
 
     def percent(value)

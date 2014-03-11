@@ -8,8 +8,6 @@ module Diversifier
       project = Project.new
       project.iterate(limit: 100)
       project
-      #project.iteration_report
-      #project.final_report
     end
 
     def initialize
@@ -25,8 +23,9 @@ module Diversifier
       current_iteration.popularity || 10
     end
 
-    def iterate(args)
-      return if self.iterations.count > args[:limit] || popularity < 10 || current_iteration.group.size < 1
+    def iterate(args={})
+      limit = args[:limit] || 100
+      return if self.iterations.count > limit || popularity < 10 || current_iteration.group.size < 1
       self.iterations << Diversifier::Iteration.with(
         group.grow(current_iteration.meets_needs?),
         current_iteration.effectiveness,
@@ -70,16 +69,6 @@ module Diversifier
         s << "#{iteration.popularity.to_i}\t"
         puts s
       end
-    end
-
-    def final_report
-      s = ""
-      s << "#{self.iterations.count}\t"
-      s << "#{max_group_size}\t"
-      s << "#{max_diversity.to_i}\t"
-      s << "#{max_effectiveness.to_i}\t"
-      s << "#{max_popularity.to_i}\t"
-      puts s
     end
 
   end

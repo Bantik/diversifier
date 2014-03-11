@@ -2,7 +2,9 @@ module Diversifier
 
   class Group
 
-    attr_accessor :in_group, :out_group, :effectiveness, :previous_effectiveness, :out_group_newcomers, :in_group_newcomers
+    attr_accessor :effectiveness, :previous_effectiveness
+    attr_accessor :in_group, :in_group_newcomers
+    attr_accessor :out_group, :out_group_newcomers
 
     def initialize(args={})
       self.in_group = args[:in_group] || 2
@@ -13,9 +15,12 @@ module Diversifier
     end
 
     def reset
+      group_a = self.in_group + self.in_group_newcomers.to_i
+      group_b = self.out_group + self.out_group_newcomers.to_i 
+
       Diversifier::Group.new(
-        :in_group => self.in_group + self.in_group_newcomers.to_i,
-        :out_group => self.out_group + self.out_group_newcomers.to_i,
+        :in_group => [group_a, group_b].max,
+        :out_group => [group_a, group_b].min,
         :effectiveness => effectiveness
       )
     end

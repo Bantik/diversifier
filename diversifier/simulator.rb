@@ -8,27 +8,26 @@ module Diversifier
     
     def run
       self.projects ||= []
-      print "."
+      print "\r\e[0KSimulating project #{self.projects.count + 1}..."
       self.projects << Project.run
-      run unless diverse_projects.count == 50
+      run unless diverse_projects.count == 100
     end
 
     def summarize
-      puts
+      puts; puts
+      diverse_report = Report.new(diverse_projects, "Diverse Projects")
+      homogenous_report = Report.new(homogenous_projects, "Homogenous Projects")
 
-      diverse = Report.new(diverse_projects, "Diverse Projects")
-      homogenous = Report.new(homogenous_projects, "Homogenous Projects")
-
-      tp.set Report, :type, :avg_releases, :avg_members, :avg_effectiveness, :avg_popularity
-      tp [diverse, homogenous] 
+      tp.set Report, Report.attributes
+      tp [homogenous_report, diverse_report] 
     end
 
     def diverse_projects
-      projects.select{|p| p.max_diversity > 0}
+      projects.select{|p| p.max_diversity > 0}[0..99]
     end
 
     def homogenous_projects
-      projects.select{|p| p.max_diversity == 0}
+      projects.select{|p| p.max_diversity == 0}[0..99]
     end
 
     def report(projs)
@@ -46,6 +45,10 @@ module Diversifier
   class Report
 
     attr_accessor :projects, :type
+
+    def self.attributes
+      [:type, :avg_releases, :avg_members, :avg_effectiveness, :avg_popularity]
+    end
 
     def initialize(projects, type)
       self.projects = projects

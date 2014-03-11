@@ -18,4 +18,6 @@ module Diversifier
 
 end
 
-Diversifier.run
+unless ENV['RACK_ENV'] == "test"
+  Diversifier.run
+end
