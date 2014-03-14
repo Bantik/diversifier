@@ -1,6 +1,14 @@
 require 'rubygems'
-require 'gosu'
+require 'bundler'
+require 'bundler/setup'
 require 'debugger'
+require 'mongoid'
+require 'active_support'
+require 'active_support/core_ext'
+
+Bundler.require
+
+Mongoid.load!("mongoid.yml", :development)
 
 module Diversifier
   
@@ -9,15 +17,4 @@ module Diversifier
   require_relative 'diversifier/project'
   require_relative 'diversifier/simulator'
 
-  def self.run
-    simulator = Simulator.new
-    print "Modeling projects"
-    simulator.run
-    simulator.summarize
-  end
-
-end
-
-unless ENV['RACK_ENV'] == "test"
-  Diversifier.run
 end

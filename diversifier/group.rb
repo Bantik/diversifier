@@ -2,71 +2,73 @@ module Diversifier
 
   class Group
 
-    attr_accessor :effectiveness, :previous_effectiveness
-    attr_accessor :in_group, :in_group_newcomers
-    attr_accessor :out_group, :out_group_newcomers
+    include PoroPlus
 
-    def initialize(args={})
-      self.in_group = args[:in_group] || 2
-      self.out_group = args[:out_group] || 0
-      self.previous_effectiveness = args[:effectiveness] || 75
-      self.out_group_newcomers = 0
-      self.in_group_newcomers = 0
-    end
+    attr_accessor :previous_effectiveness
+    attr_accessor :majority 
+    attr_accessor :minority
+    attr_accessor :majority_newcomers
+    attr_accessor :minority_newcomers
+    attr_accessor :members
 
-    def reset
-      group_a = self.in_group + self.in_group_newcomers.to_i
-      group_b = self.out_group + self.out_group_newcomers.to_i 
+    DEFAULT_ACCURACY = 50
 
-      Diversifier::Group.new(
-        :in_group => [group_a, group_b].max,
-        :out_group => [group_a, group_b].min,
-        :effectiveness => effectiveness
-      )
+    def resize(successful=true)
+      successful ? handle_growth : handle_attrition
+      self
     end
 
     def handle_attrition
       rand(3).times do
         if rand(2) == 1
-          self.in_group -= 1
+          self.majority -= 1
         else
-          self.out_group -= 1
+          self.minority -= 1
         end
       end
-      self.in_group = [self.in_group, 0].max
-      self.out_group = [self.out_group, 0].max
     end
 
     def handle_growth
       return unless rand(4) == 1
       rand(3).times do
-        if attracting_diversity
-          self.out_group_newcomers += 1
+        if attracting_diversity?
+          self.minority_newcomers += 1
         else
-          self.in_group_newcomers += 1
+          self.majority_newcomers += 1
         end
       end
     end
 
-    def grow(successful=true)
-      successful ? handle_growth : handle_attrition
-      reset
+    def majority
+      @majority ||= 0
+    end
+
+    def majority_newcomers
+      @majority_newcomers ||= 0
+    end
+
+    def minority
+      @minority ||= 0
+    end
+
+    def minority_newcomers
+      @minority_newcomers ||= 0
     end
 
     def effectiveness
-      value = [in_group_accuracy.to_i, out_group_accuracy.to_i].compact.max 
+      value = [majority_accuracy, minority_accuracy].compact.max 
       value > 0 && value || self.previous_effectiveness
     end
 
-    def in_group_accuracy
-      return unless in_group_newcomers > 0
+    def majority_accuracy
+      return DEFAULT_ACCURACY unless majority_newcomers.to_i > 0
       newcomers_vote = rand(2)
       oldtimers_vote = rand(2)
       newcomers_vote == oldtimers_vote ? 35 : 65
     end
 
-    def out_group_accuracy
-      return unless out_group_newcomers > 0
+    def minority_accuracy
+      return unless minority_newcomers.to_i > 0
       newcomers_vote = rand(2)
       oldtimers_vote = rand(2)
       newcomers_vote == oldtimers_vote ? 60 : 75
@@ -78,29 +80,21 @@ module Diversifier
       signals
     end
 
-    def attracting_diversity
+    def attracting_diversity?
       signals.times{ return true if rand(100) < 3}
       false
     end
 
-    def majority
-      [in_group, out_group].max
-    end
-
-    def minority
-      [in_group, out_group].min
-    end
-
     def diversity
       begin
-        ((minority.abs / size.to_f ) * 100).to_i
+        (self.minority / members.to_f * 100).to_i
       rescue
         0
       end
     end
 
-    def size
-      in_group + out_group
+    def members
+      self.majority + self.minority
     end
 
   end

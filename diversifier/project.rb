@@ -2,48 +2,83 @@ module Diversifier
   
   class Project
 
-    attr_accessor :iterations, :group, :popularity
+    include Mongoid::Document
 
-    def self.run
-      project = Project.new
-      project.iterate(limit: 100)
-      project
+    field :avg_popularity, type: :float, default: 0.0
+    field :avg_effectiveness, type: :float, default: 0.0
+    field :avg_group_size, type: :float, default: 0.0
+    field :avg_diversity, type: :float, default: 0.0
+
+    embeds_many :iterations
+
+    def self.diverse
+      where(:avg_diversity.gt => 0)
     end
 
-    def initialize
-      self.group = Group.new
-      start = Diversifier::Iteration.new
-      start.group = self.group
-      start.previous_effectiveness = 50
-      start.previous_popularity = 10
-      self.iterations = [start]
+    def self.homogenous
+      where(:avg_diversity => 0)
     end
 
-    def popularity
-      current_iteration.popularity || 10
-    end
-
-    def iterate(args={})
-      limit = args[:limit] || 100
-      return if self.iterations.count > limit || popularity < 10 || current_iteration.group.size < 1
-      self.iterations << Diversifier::Iteration.with(
-        group.grow(current_iteration.meets_needs?),
-        current_iteration.effectiveness,
-        current_iteration.popularity
+    def setup
+      self.iterations.delete_all
+      self.iterations.create(
+        members: 2,
+        majority: 2,
+        minority: 0,
+        previous_popularity: 10,
+        previous_effectiveness: 75
       )
-      iterate(args)
     end
 
-    def current_iteration
+    def release
+      return unless viable?
+      next_iteration = self.iterations.create(
+        members: last_group.members,
+        majority: last_group.majority,
+        minority: last_group.minority,
+        previous_popularity: previous_popularity,
+        previous_effectiveness: previous_effectiveness
+      )
+      next_iteration.iterate!
+      recalculate_and_save!
+    end
+
+    def viable?
+      last_group.members > 0 && previous_effectiveness > 0
+    end
+
+    def recalculate_and_save!
+      return unless self.iterations.count > 0
+      update_attributes(
+        :avg_diversity      => max_diversity / total_iterations.to_f,
+        :avg_effectiveness  => max_effectiveness / total_iterations.to_f,
+        :avg_popularity     => max_popularity / total_iterations.to_f,
+        :avg_group_size     => max_group_size / total_iterations.to_f
+      )
+    end
+
+    def last_group
+      last_iteration.try(:group) || Diversifier::Group.new(members: 2, previous_effectiveness: 50)
+    end
+
+    def previous_effectiveness
+      last_group.try(:effectiveness) || 50
+    end
+
+    def previous_popularity
+      last_iteration.try(:popularity) || 10
+    end
+
+    def last_iteration
       self.iterations.last
     end
 
     def total_iterations
-      self.iterations.count
+      @total_iterations ||= self.iterations.count
     end
 
     def max_group_size
-      self.iterations.map(&:group).map(&:size).flatten.max
+      self.iterations.map(&:members).flatten.max
     end
 
     def max_diversity
@@ -56,19 +91,6 @@ module Diversifier
 
     def max_effectiveness
       self.iterations.map(&:effectiveness).compact.max
-    end
-
-    def iteration_report
-      puts "Iteration\tMembers\tDiversity\tEffectiveness\tPopularity"
-      self.iterations.each_with_index do |iteration, i|
-        s = ""
-        s << "#{i+1}\t"
-        s << "#{iteration.group.size}\t"
-        s << "#{iteration.diversity.to_i}\t"
-        s << "#{iteration.effectiveness.to_i}\t"
-        s << "#{iteration.popularity.to_i}\t"
-        puts s
-      end
     end
 
   end

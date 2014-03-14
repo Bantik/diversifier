@@ -6,38 +6,25 @@ module Diversifier
 
     attr_accessor :projects
     
-    def run
-      self.projects ||= []
-      print "\r\e[0KSimulating project #{self.projects.count + 1}..."
-      self.projects << Project.run
-      run unless diverse_projects.count == 100
+    def self.run!(projects=500, releases = 50)
+      (1..projects).to_a.inject([]) do |a, i|
+        project = Project.create
+        project.setup
+        releases.times{ project.release }
+        a << project
+      end
+      summarize
     end
 
-    def summarize
-      puts; puts
-      diverse_report = Report.new(diverse_projects, "Diverse Projects")
-      homogenous_report = Report.new(homogenous_projects, "Homogenous Projects")
+    def self.reset!
+      Diversifier::Project.delete_all
+    end
 
+    def self.summarize
+      homogenous_report = Report.new(Diversifier::Project.homogenous, "Homogenous Projects")
+      diverse_report = Report.new(Diversifier::Project.diverse, "Diverse Projects")
       tp.set Report, Report.attributes
       tp [homogenous_report, diverse_report] 
-    end
-
-    def diverse_projects
-      projects.select{|p| p.max_diversity > 0}[0..99]
-    end
-
-    def homogenous_projects
-      projects.select{|p| p.max_diversity == 0}[0..99]
-    end
-
-    def report(projs)
-      puts "Releases\tMax Members\tMax Diversity\tMax Effectiveness\tMax Popularity"
-      projs.each{|project| project.final_report}
-    end
-
-    def final_report
-      report(diverse_projects)
-      report(homogenous_projects)
     end
 
   end
@@ -56,23 +43,23 @@ module Diversifier
     end
 
     def avg_releases
-      values = self.projects.map(&:total_iterations)
-      values.reduce(:+) / values.count
+      return 0 unless self.projects.present?
+      self.projects.sum(&:total_iterations) / self.projects.count.to_f
     end
 
     def avg_members
-      values = self.projects.map(&:max_group_size)
-      values.reduce(:+) / values.count
+      return 0 unless self.projects.present?
+      self.projects.sum(&:max_group_size) / self.projects.count.to_f
     end
 
     def avg_effectiveness
-      values = self.projects.map(&:max_effectiveness)
-      values.reduce(:+) / values.count
+      return 0 unless self.projects.present?
+      self.projects.sum(&:max_effectiveness) / self.projects.count.to_f
     end
 
     def avg_popularity
-      values = self.projects.map(&:max_popularity)
-      values.reduce(:+) / values.count
+      return 0 unless self.projects.present?
+      self.projects.sum(&:max_popularity) / self.projects.count.to_f
     end
 
   end

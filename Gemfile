@@ -2,6 +2,9 @@ source 'https://rubygems.org'
 
 gem 'rspec'
 gem 'rspec-core'
-gem 'gosu'
+gem 'activesupport'
+gem 'poro_plus'
+gem "mongoid", :git => 'https://github.com/mongoid/mongoid.git'
+gem "bson_ext"
 gem 'debugger'
-gem "table_print", "~> 1.0.0"
+gem "table_print"
