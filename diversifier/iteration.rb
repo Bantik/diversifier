@@ -16,21 +16,18 @@ module Diversifier
 
     embedded_in :project, inverse_of: :iterations
 
-    attr_accessor :group, :previous_effectiveness, :previous_popularity
+    attr_accessor :previous_effectiveness, :previous_popularity, :group
 
     def iterate!
       self.group.resize
       self.majority = self.group.majority
-      self.minority = self.group.majority
+      self.minority = self.group.minority
       self.members = self.group.members
       self.diversity = self.group.diversity
       self.effectiveness = self.group.effectiveness
       self.popularity = recalculate_popularity
+      self.save
       self
-    end
-
-    def group
-      @group ||= Diversifier::Group.new
     end
 
     def meets_needs?

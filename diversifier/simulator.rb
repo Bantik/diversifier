@@ -8,11 +8,13 @@ module Diversifier
     
     def self.run!(projects=500, releases = 50)
       (1..projects).to_a.inject([]) do |a, i|
+        print '.'
         project = Project.create
         project.setup
         releases.times{ project.release }
         a << project
       end
+      puts
       summarize
     end
 

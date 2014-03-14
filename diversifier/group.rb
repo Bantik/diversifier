@@ -9,7 +9,6 @@ module Diversifier
     attr_accessor :minority
     attr_accessor :majority_newcomers
     attr_accessor :minority_newcomers
-    attr_accessor :members
 
     DEFAULT_ACCURACY = 50
 

@@ -33,9 +33,10 @@ module Diversifier
     def release
       return unless viable?
       next_iteration = self.iterations.create(
-        members: last_group.members,
-        majority: last_group.majority,
-        minority: last_group.minority,
+        group: Diversifier::Group.new(group_params),
+        members: last_iteration.members,
+        majority: last_iteration.majority,
+        minority: last_iteration.minority,
         previous_popularity: previous_popularity,
         previous_effectiveness: previous_effectiveness
       )
@@ -43,8 +44,17 @@ module Diversifier
       recalculate_and_save!
     end
 
+    def group_params
+      {
+        members: last_iteration.members,
+        majority: last_iteration.majority,
+        minority: last_iteration.minority,
+        previous_effectiveness: last_iteration.effectiveness
+      }
+    end
+
     def viable?
-      last_group.members > 0 && previous_effectiveness > 0
+      last_iteration.members > 0 && previous_effectiveness > 0
     end
 
     def recalculate_and_save!
