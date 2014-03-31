@@ -7,4 +7,3 @@ gem 'poro_plus'
 gem "mongoid", :git => 'https://github.com/mongoid/mongoid.git'
 gem "bson_ext"
 gem 'debugger'
-gem "table_print"

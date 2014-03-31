@@ -31,7 +31,11 @@ module Diversifier
     end
 
     def release
-      return unless viable?
+      create_iteration if viable?
+      recalculate_and_save!
+    end
+
+    def create_iteration
       next_iteration = self.iterations.create(
         group: Diversifier::Group.new(group_params),
         members: last_iteration.members,
@@ -41,7 +45,6 @@ module Diversifier
         previous_effectiveness: previous_effectiveness
       )
       next_iteration.iterate!
-      recalculate_and_save!
     end
 
     def group_params
@@ -60,10 +63,10 @@ module Diversifier
     def recalculate_and_save!
       return unless self.iterations.count > 0
       update_attributes(
-        :avg_diversity      => max_diversity / total_iterations.to_f,
-        :avg_effectiveness  => max_effectiveness / total_iterations.to_f,
-        :avg_popularity     => max_popularity / total_iterations.to_f,
-        :avg_group_size     => max_group_size / total_iterations.to_f
+        :avg_diversity      => self.iterations.avg(:diversity),
+        :avg_effectiveness  => self.iterations.avg(:effectiveness),
+        :avg_popularity     => self.iterations.avg(:popularity),
+        :avg_group_size     => self.iterations.avg(:members)
       )
     end
 
@@ -85,22 +88,6 @@ module Diversifier
 
     def total_iterations
       @total_iterations ||= self.iterations.count
-    end
-
-    def max_group_size
-      self.iterations.map(&:members).flatten.max
-    end
-
-    def max_diversity
-      self.iterations.map(&:diversity).compact.max
-    end
-
-    def max_popularity
-      self.iterations.map(&:popularity).compact.max
-    end
-
-    def max_effectiveness
-      self.iterations.map(&:effectiveness).compact.max
     end
 
   end
